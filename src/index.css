@@ -379,6 +379,20 @@ ul {
   padding: var(--sp-6);
 }
 
+/* ----- Height ----- */
+.h-full {
+  height: 100%;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+/* ----- Width ----- */
+.w-full {
+  width: 100%;
+}
+
 /* ----- Max-Width ----- */
 .max-w-0 {
   max-width: var(--width-0);
@@ -426,6 +440,23 @@ ul {
 
 .max-w-7xl {
   max-width: var(--width-7xl);
+}
+
+/* ----- Flexbox ----- */
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
 }
 
 /* ----- Buttons ----- */
