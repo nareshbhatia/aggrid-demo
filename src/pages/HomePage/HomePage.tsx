@@ -7,91 +7,49 @@ import {
 } from 'ag-grid-community';
 import 'ag-grid-enterprise';
 import { AgGridReact } from 'ag-grid-react';
-// import { evaluate } from 'mathjs';
+import deepmerge from 'deepmerge';
 import numeral from 'numeral';
 import { Header } from '../../components';
+import columnConfig from './column-config.json';
 import { lots } from './data';
-
-const PriorityEnum: { [key: string]: number } = {
-  L: 0,
-  M: 1,
-  H: 2,
-};
 
 const formatNumber = (params: ValueFormatterParams) => {
   return numeral(params.value).format('0,0.00');
 };
 
-const columnDefs = [
-  { field: 'symbol', headerName: 'Symbol', rowGroup: true, hide: true },
-  { field: 'id', headerName: 'Lot #', type: 'rightAligned' },
-  {
-    field: 'priority',
-    headerName: 'Priority',
-    comparator: (valueA: string, valueB: string) =>
-      PriorityEnum[valueA] - PriorityEnum[valueB],
-  },
-  {
-    field: 'quantity',
-    colId: 'quantity',
-    headerName: 'Quantity',
-    type: 'rightAligned',
-    editable: true,
-  },
-  {
-    headerName: 'Buy',
-    children: [
-      { field: 'buy.date', headerName: 'Date' },
-      {
-        field: 'buy.price',
-        colId: 'buyPrice',
-        headerName: 'Price',
-        valueFormatter: formatNumber,
-        type: 'rightAligned',
-        editable: true,
-      },
-      {
-        colId: 'buyAmount',
-        headerName: 'Amount',
-        valueGetter: 'getValue("quantity") * getValue("buyPrice")',
-        valueFormatter: formatNumber,
-        type: 'rightAligned',
-      },
-    ],
-  },
-  {
-    headerName: 'Sell',
-    children: [
-      { field: 'sell.date', headerName: 'Date' },
-      {
-        field: 'sell.price',
-        colId: 'sellPrice',
-        headerName: 'Price',
-        valueFormatter: formatNumber,
-        type: 'rightAligned',
-        editable: true,
-      },
-      {
-        colId: 'sellAmount',
-        headerName: 'Amount',
-        valueGetter: 'getValue("quantity") * getValue("sellPrice")',
-        valueFormatter: formatNumber,
-        type: 'rightAligned',
-      },
-    ],
-  },
-  {
-    field: 'gain',
-    headerName: 'Gain',
-    valueGetter: 'getValue("sellAmount") - getValue("buyAmount")',
-    valueFormatter: formatNumber,
-    type: 'rightAligned',
-    cellClassRules: {
-      loss: 'x < 0',
-      profit: 'x > 0',
-    },
-  },
-];
+const mapValueFormatter = (formatterName: string) => {
+  switch (formatterName) {
+    case 'formatNumber':
+      return formatNumber;
+    default:
+      return null;
+  }
+};
+
+function mapColumnConfigs(configs: Array<object>) {
+  return configs.map((config) => {
+    let columnDef = deepmerge({}, config);
+    // @ts-ignore
+    if (columnDef.valueFormatter) {
+      // @ts-ignore
+      columnDef.valueFormatter = mapValueFormatter(columnDef.valueFormatter);
+    }
+    // @ts-ignore
+    if (columnDef.comparator) {
+      // @ts-ignore
+      // eslint-disable-next-line no-new-func
+      columnDef.comparator = new Function('valueA', 'valueB', columnDef.comparator);
+    }
+    // @ts-ignore
+    if (columnDef.children) {
+      // @ts-ignore
+      columnDef.children = mapColumnConfigs(columnDef.children);
+    }
+    return columnDef;
+  });
+}
+
+const columnDefs = mapColumnConfigs(columnConfig);
 
 export function HomePage() {
   const [rowData] = React.useState(lots);
@@ -110,6 +68,7 @@ export function HomePage() {
   const gridOptions: GridOptions = {
     suppressCellSelection: true,
     defaultColDef,
+    // @ts-ignore
     columnDefs,
     rowData,
     onGridReady: handleGridReady,

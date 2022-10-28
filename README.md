@@ -21,7 +21,7 @@ These computations are done using valueGetters with cell expressions, e.g.
 }
 ```
 
-### Cell Styles based on values
+### Cell Styles based on cell values
 
 The Gain column is colored green for gain and red for loss. This is done using cellClassRules with expressions:
 
